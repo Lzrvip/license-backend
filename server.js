@@ -1,7 +1,9 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
-const PORT = 3000;
+
+// Use the environment's PORT, or default to 3000 for local development
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -19,6 +21,5 @@ app.post('/validate-key', (req, res) => {
         res.status(400).json({ valid: false, message: 'Invalid License Key' });
     }
 });
-
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
