@@ -10,6 +10,11 @@ app.use(express.json());
 // Load license keys from a JSON file
 const validKeys = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
 
+// Root route to handle GET requests to "/"
+app.get('/', (req, res) => {
+    res.send('Welcome to the License Validation API!');
+});
+
 // Validate License Key API
 app.post('/validate-key', (req, res) => {
     const { licenseKey } = req.body; // Extract licenseKey from the request body
