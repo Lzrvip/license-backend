@@ -3,28 +3,34 @@ const fs = require('fs');
 const app = express();
 const PORT = 3000;
 
+// Middleware
 app.use(express.json());
 
-// Load license keys from a JSON file (simulating a database)
+// Load license keys from a JSON file
 let validKeys = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
 
 // Validate License Key API
 app.post('/validate-key', (req, res) => {
     const { licenseKey, deviceId } = req.body;
-
-    // Find the stored license key data
     const keyData = validKeys.find(k => k.key === licenseKey);
 
-    if (keyData) {
-        // Check if the deviceId matches the one associated with the license key
-        if (keyData.deviceId === deviceId) {
-            return res.status(200).json({ valid: true, message: 'License Key is valid!' });
+    if (keyData && keyData.valid) {
+        if (!keyData.deviceId) {
+            // First-time registration
+            keyData.deviceId = deviceId; // Bind the license key to this device
+            fs.writeFileSync('./keys.json', JSON.stringify(validKeys, null, 2));
+            res.status(200).json({ valid: true, message: 'License Key is valid and registered!' });
+        } else if (keyData.deviceId === deviceId) {
+            // Already registered to the same device
+            res.status(200).json({ valid: true, message: 'License Key is valid!' });
         } else {
-            return res.status(400).json({ valid: false, message: 'License Key is already registered to another device.' });
+            // Key already registered to another device
+            res.status(400).json({ valid: false, message: 'License Key is already registered to another device.' });
         }
     } else {
-        return res.status(400).json({ valid: false, message: 'Invalid License Key' });
+        res.status(400).json({ valid: false, message: 'Invalid License Key' });
     }
 });
 
+// Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
