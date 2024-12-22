@@ -1,29 +1,29 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
-
-// Use the environment's PORT, or default to 3000 for local development
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(express.json());
 
-// Load license keys from a JSON file
-const validKeys = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
-
-// Root route to handle GET requests to "/"
-app.get('/', (req, res) => {
-    res.send('Welcome to the License Validation API!');
-});
+// Load license keys from a JSON file (simulating a database)
+let validKeys = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
 
 // Validate License Key API
 app.post('/validate-key', (req, res) => {
-    const { licenseKey } = req.body; // Extract licenseKey from the request body
+    const { licenseKey, deviceId } = req.body;
+
+    // Find the stored license key data
     const keyData = validKeys.find(k => k.key === licenseKey);
 
-    if (keyData && keyData.valid) {
-        res.status(200).json({ valid: true, message: 'License Key is valid!' });
+    if (keyData) {
+        // Check if the deviceId matches the one associated with the license key
+        if (keyData.deviceId === deviceId) {
+            return res.status(200).json({ valid: true, message: 'License Key is valid!' });
+        } else {
+            return res.status(400).json({ valid: false, message: 'License Key is already registered to another device.' });
+        }
     } else {
-        res.status(400).json({ valid: false, message: 'Invalid License Key' });
+        return res.status(400).json({ valid: false, message: 'Invalid License Key' });
     }
 });
 
